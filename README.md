@@ -1,2 +1,17 @@
-# myohan-myeongsang
-묘한 명상 YouTube channel strategy, content system, and operating agent
+# 묘한 명상
+
+고양이와 함께, 숨을 고르는 시간.
+
+유튜브 채널 **묘한 명상**의 전략, 콘텐츠 시스템, 운영 에이전트 저장소입니다.
+
+## 구성
+
+- `STRATEGY.md` — 채널 전략 요약 (상세본은 Word 계획서)
+- `AGENT.md` — 주간 에이전트 사용법
+
+## 에이전트 트리거
+
+- 묘한 명상 이번주 기획
+- 비 오는 창가 고양이 수면음악 영상 패키지
+- 배경과 음악 3조합
+- 지난주 성과로 전략 패치
