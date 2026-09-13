@@ -1,0 +1,30 @@
+{
+  "channel": "묘한 명상",
+  "tagline": "고양이와 함께, 숨을 고르는 시간.",
+  "repo": "juny79/myohan-myeongsang",
+  "version": "1.0",
+  "updated": "2026-09-13",
+  "weekStart": "2026-09-15",
+  "weekLabel": "1주차 · 세계관 고정",
+  "experiment": {"title": "파일럿 수면 길이를 150분으로 시작", "reason": "10시간 루프 대신 상대 유지율을 본다"},
+  "kpis": {"longformTarget": 2, "shortsTarget": 4, "claimsTarget": 0},
+  "pipeline": [
+    {"id": "concept", "name": "콘셉트", "hint": "기둥 + 공간 + 용도"},
+    {"id": "music", "name": "음악", "hint": "Bed를 먼저. 라이선스 ID 기록"},
+    {"id": "key", "name": "키비주얼", "hint": "썸네일 = 이 장면 크롭"},
+    {"id": "loop", "name": "루프 영상", "hint": "20–40초, 한 화풍"},
+    {"id": "mix", "name": "믹스", "hint": "-16 LUFS, 이음새 4–8초"},
+    {"id": "thumb", "name": "썸네일", "hint": "한글 2–6자, 얼굴 40%"},
+    {"id": "upload", "name": "예약 공개", "hint": "설명·책터·재생목록"}
+  ],
+  "items": [
+    {"id": "w1-tue", "date": "2026-09-15", "dow": "월", "kind": "shorts", "pillar": "Sh", "title": "화요일 한옥 명상 20초 예고", "space": "한옥 마루", "bed": "소프트 피아노", "minutes": 0.5, "publish": "12:00", "stage": "concept", "status": "예정"},
+    {"id": "w1-long-m", "date": "2026-09-16", "dow": "화", "kind": "long", "pillar": "M", "title": "한옥에서 숨 고르기 | 오전 명상음악", "space": "한옥 마루", "bed": "소프트 피아노", "minutes": 45, "publish": "21:30", "stage": "concept", "status": "예정"},
+    {"id": "w1-wed", "date": "2026-09-17", "dow": "수", "kind": "shorts", "pillar": "Sh", "title": "창틀 고양이", "space": "한옥 창호", "bed": "웨 어쿠스틱", "minutes": 0.5, "publish": "19:00", "stage": "concept", "status": "예정"},
+    {"id": "w1-thu", "date": "2026-09-18", "dow": "목", "kind": "shorts", "pillar": "Sh", "title": "오늘 밤 같이 틀어둘까요", "space": "비 오는 창가", "bed": "낮은 패드+비", "minutes": 0.5, "publish": "19:00", "stage": "concept", "status": "예정"},
+    {"id": "w1-long-s", "date": "2026-09-19", "dow": "금", "kind": "long", "pillar": "S", "title": "잠이 안 올 때 | 비 오는 창가 고양이 수면음악", "space": "비 오는 창가", "bed": "낮은 패드+비", "minutes": 150, "publish": "22:00", "stage": "concept", "status": "예정"},
+    {"id": "w1-sat", "date": "2026-09-20", "dow": "토", "kind": "shorts", "pillar": "Sh", "title": "노을 모래 위", "space": "해변 노을", "bed": "절제 재즈 피아노", "minutes": 0.5, "publish": "12:00", "stage": "concept", "status": "예정"},
+    {"id": "w1-sun", "date": "2026-09-21", "dow": "일", "kind": "review", "pillar": "—", "title": "1주차 리뷰 · 전략 한 줄 패치", "space": "—", "bed": "—", "minutes": 0, "publish": "—", "stage": "concept", "status": "예정"}
+  ],
+  "changelog": [{"date": "2026-09-13", "change": "v1.0 운영 체계와 대시보드 초안", "reason": "채널 론칭 실행면 확보"}]
+}
