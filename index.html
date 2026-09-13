@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>묘한 명상 · 운영 대시보드</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet" />
+  <style>
+    :root { --ink:#1c1917; --cream:#f6f1e8; --cream-2:#ebe4d8; --sage:#8b9a7d; --sage-d:#6f7d63; --gold:#c9a96a; --muted:#8a8279; --line:rgba(201,169,106,.22); --card:#241f1c; --bad:#b4554a; --blue:#7a93a7; }
+    *{box-sizing:border-box} html,body{margin:0;background:var(--ink);color:var(--cream);font-family:"Noto Sans KR",sans-serif}
+    a{color:var(--gold);text-decoration:none} a:hover{text-decoration:underline}
+    .wrap{max-width:1280px;margin:0 auto;padding:28px 22px 80px}
+    header.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:22px}
+    .eyebrow{color:var(--gold);letter-spacing:.18em;font-size:11px;font-weight:600}
+    h1{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:42px;margin:6px 0 4px}
+    .tagline{color:var(--muted);margin:0}
+    .meta{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .chip{border:1px solid var(--line);background:var(--card);color:var(--cream-2);padding:7px 11px;border-radius:999px;font-size:12px}
+    .chip strong{color:var(--gold)}
+    .grid{display:grid;grid-template-columns:1.4fr .8fr;gap:16px}
+    @media(max-width:980px){.grid,.split{grid-template-columns:1fr!important}}
+    .card{background:linear-gradient(180deg,#261f1b,#1f1b18);border:1px solid var(--line);border-radius:16px;padding:18px}
+    .card h2{font-size:15px;margin:0 0 12px;font-weight:600}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+    @media(max-width:800px){.kpis{grid-template-columns:repeat(2,1fr)}}
+    .kpi{background:#1a1614;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+    .kpi .n{font-family:"Cormorant Garamond",serif;font-size:30px;color:var(--gold);line-height:1}
+    .kpi .l{color:var(--muted);font-size:12px;margin-top:6px}
+    .pipe{display:flex;gap:6px;overflow-x:auto}
+    .step{min-width:112px;flex:1;background:#1a1614;border:1px solid var(--line);border-radius:12px;padding:10px}
+    .step.on{border-color:var(--sage);background:#1d241c}
+    .step .i{font-size:11px;color:var(--gold)}
+    .step .n{font-size:13px;margin-top:4px}
+    .step .h{font-size:11px;color:var(--muted);margin-top:4px}
+    .loop{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .loop div{background:#1a1614;border-radius:12px;padding:12px;border:1px solid var(--line)}
+    .loop b{display:block;color:var(--gold);font-size:12px;margin-bottom:6px}
+    .loop p{margin:0;color:var(--cream-2);font-size:12px;line-height:1.55}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{text-align:left;color:var(--muted);font-weight:500;font-size:11px;padding:8px 6px;border-bottom:1px solid var(--line)}
+    td{padding:10px 6px;border-bottom:1px solid rgba(246,241,232,.06);vertical-align:top}
+    tr.today td{background:rgba(139,154,125,.08)}
+    .pill{display:inline-block;border-radius:999px;padding:2px 8px;font-size:11px}
+    .long{background:#243024;color:#c5d4b8}.shorts{background:#2a261c;color:#e4d3a4}.review{background:#1d2228;color:#b9c7d3}
+    .row-actions{display:flex;gap:6px;flex-wrap:wrap}
+    button,.btn{appearance:none;border:1px solid var(--line);background:#2a2420;color:var(--cream);border-radius:9px;padding:7px 10px;font-size:12px;cursor:pointer;font-family:inherit}
+    button:hover,.btn:hover{border-color:var(--gold);color:var(--gold)}
+    button.primary{background:var(--sage-d);border-color:var(--sage);color:#f6f1e8}
+    .prompts{display:flex;flex-direction:column;gap:8px}
+    .prompt{background:#1a1614;border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+    .prompt p{margin:0;font-size:13px;line-height:1.5}
+    .prompt span{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+    .log div{padding:8px 0;border-bottom:1px solid rgba(246,241,232,.06);font-size:13px}
+    .toast{position:fixed;bottom:18px;right:18px;background:var(--cream);color:var(--ink);padding:10px 14px;border-radius:10px;font-size:13px;display:none;z-index:20}
+    select{background:#1a1614;color:var(--cream);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-family:inherit;font-size:12px}
+    .foot{margin-top:18px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .note{font-size:12px;color:var(--muted);line-height:1.6}
+    .gh{display:flex;flex-direction:column;gap:8px}
+    .gh a.btn{display:inline-block;text-align:center}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div>
+        <div class="eyebrow">MYOHAN MEDITATION  ·  OPS BOARD</div>
+        <h1>묘한 명상</h1>
+        <p class="tagline" id="tagline">고양이와 함께, 숨을 고르는 시간.</p>
+      </div>
+      <div class="meta">
+        <div class="chip" id="weekChip">1주차</div>
+        <div class="chip">저장소 <strong>juny79/myohan-myeongsang</strong></div>
+        <div class="chip" id="clock"></div>
+      </div>
+    </header>
+    <div class="kpis">
+      <div class="kpi"><div class="n" id="kpiLong">0/2</div><div class="l">이번 주 롱폼 완료</div></div>
+      <div class="kpi"><div class="n" id="kpiShort">0/4</div><div class="l">이번 주 싷츠 완료</div></div>
+      <div class="kpi"><div class="n" id="kpiNow">—</div><div class="l">오늘 할 슬롯</div></div>
+      <div class="kpi"><div class="n" id="kpiClaim">0</div><div class="l">Content ID 클레임 목표</div></div>
+    </div>
+    <div class="grid">
+      <section class="card">
+        <h2>영상 제작 파이프라인</h2>
+        <div class="pipe" id="pipe"></div>
+        <p class="note" style="margin:12px 0 8px">단계·상태를 바꾸면 이 브라우저에 저장됩니다. JSON을 복사해 GitHub data/board.json에 반영할 수 있습니다.</p>
+        <div style="overflow-x:auto"><table><thead><tr><th>날짜</th><th>형식</th><th>제목</th><th>공간 / 음악</th><th>단계</th><th>상태</th><th>실행</th></tr></thead><tbody id="rows"></tbody></table></div>
+      </section>
+      <aside>
+        <section class="card" style="margin-bottom:16px">
+          <h2>에이전트 운영 루프</h2>
+          <div class="loop">
+            <div><b>월 09:00</b><p>자동화 브리핑. 경쟁 5개, 실험 1개, 화·금 콘셉트.</p></div>
+            <div><b>화–금</b><p>패키지 → 생성/촬영 → 믹스 → 예약. 싷츠는 롱폼의 20초.</p></div>
+            <div><b>일</b><p>리뷰만. 전략은 다시 쓰지 않고 한 줄 패치.</p></div>
+          </div>
+        </section>
+        <section class="card"><h2>지금 실행</h2><div class="prompts" id="prompts"></div></section>
+      </aside>
+    </div>
+    <div class="split">
+      <section class="card">
+        <h2>GitHub 허브</h2>
+        <div class="gh">
+          <a class="btn" href="https://github.com/juny79/myohan-myeongsang" target="_blank">저장소 열기</a>
+          <a class="btn" href="https://github.com/juny79/myohan-myeongsang/blob/main/STRATEGY.md" target="_blank">STRATEGY.md</a>
+          <a class="btn" href="https://github.com/juny79/myohan-myeongsang/blob/main/AGENT.md" target="_blank">AGENT.md</a>
+          <a class="btn" href="https://github.com/juny79/myohan-myeongsang/issues" target="_blank">이슈 보드</a>
+          <a class="btn" href="https://github.com/juny79/myohan-myeongsang/issues/new?template=video-package.md" target="_blank">새 영상 이슈 만들기</a>
+          <a class="btn" href="https://app.notion.com/p/3dac83bde69881b98f9af7ff60d4859d?pvs=204" target="_blank">노션 허브</a>
+          <button type="button" id="exportBtn">현재 보드 JSON 복사</button>
+          <button type="button" id="resetBtn">로컬 진행상태 초기화</button>
+        </div>
+      </section>
+      <section class="card">
+        <h2>라이선스 게이트</h2>
+        <p class="note">공개 전에 아래가 비어 있으면 올리지 않습니다.</p>
+        <div id="gates" style="margin-top:10px"></div>
+        <h2 style="margin-top:18px">변경 로그</h2>
+        <div class="log" id="log"></div>
+      </section>
+    </div>
+    <div class="foot"><div>data/board.json + 로컬 진행상태</div><div>스킬 myohan-myeongsang · 월 09:00 KST</div></div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script type="application/json" id="board-data">{"channel":"묘한 명상","tagline":"고양이와 함께, 숨을 고르는 시간.","weekLabel":"1주차 · 세계관 고정","kpis":{"claimsTarget":0},"pipeline":[{"id":"concept","name":"콘셉트","hint":"기둥 + 공간 + 용도"},{"id":"music","name":"음악","hint":"Bed를 먼저"},{"id":"key","name":"키비주얼","hint":"썸네일=크롭"},{"id":"loop","name":"루프 영상","hint":"20–40초"},{"id":"mix","name":"믹스","hint":"-16 LUFS"},{"id":"thumb","name":"썸네일","hint":"2–6자"},{"id":"upload","name":"예약 공개","hint":"설명·재생목록"}],"items":[{"id":"w1-tue","date":"2026-09-15","dow":"월","kind":"shorts","pillar":"Sh","title":"화요일 한옥 명상 20초 예고","space":"한옥 마루","bed":"소프트 피아노","minutes":0.5,"publish":"12:00","stage":"concept","status":"예정"},{"id":"w1-long-m","date":"2026-09-16","dow":"화","kind":"long","pillar":"M","title":"한옥에서 숨 고르기 | 오전 명상음악","space":"한옥 마루","bed":"소프트 피아노","minutes":45,"publish":"21:30","stage":"concept","status":"예정"},{"id":"w1-wed","date":"2026-09-17","dow":"수","kind":"shorts","pillar":"Sh","title":"창틀 고양이","space":"한옥 창호","bed":"웨 어쿠스틱","minutes":0.5,"publish":"19:00","stage":"concept","status":"예정"},{"id":"w1-thu","date":"2026-09-18","dow":"목","kind":"shorts","pillar":"Sh","title":"오늘 밤 같이 틀어둘까요","space":"비 오는 창가","bed":"낮은 패드+비","minutes":0.5,"publish":"19:00","stage":"concept","status":"예정"},{"id":"w1-long-s","date":"2026-09-19","dow":"금","kind":"long","pillar":"S","title":"잠이 안 올 때 | 비 오는 창가 고양이 수면음악","space":"비 오는 창가","bed":"낮은 패드+비","minutes":150,"publish":"22:00","stage":"concept","status":"예정"},{"id":"w1-sat","date":"2026-09-20","dow":"토","kind":"shorts","pillar":"Sh","title":"노을 모래 위","space":"해변 노을","bed":"절제 재즈 피아노","minutes":0.5,"publish":"12:00","stage":"concept","status":"예정"},{"id":"w1-sun","date":"2026-09-21","dow":"일","kind":"review","pillar":"—","title":"1주차 리뷰 · 전략 한 줄 패치","space":"—","bed":"—","minutes":0,"publish":"—","stage":"concept","status":"예정"}],"changelog":[{"date":"2026-09-13","change":"v1.0 운영 체계와 대시보드 초안","reason":"채널 론칭 실행면 확보"}]}</script>
+  <script>
+    const STAGES=["concept","music","key","loop","mix","thumb","upload"];
+    const STAGE_NAME={concept:"콘셉트",music:"음악",key:"키비주얼",loop:"루프 영상",mix:"믹스",thumb:"썸네일",upload:"예약 공개"};
+    const STATUS=["예정","제작중","예약","완료","보류"];
+    const KEY="myohan-board-progress-v1";
+    let board=null, selected=null;
+    const toast=m=>{const el=document.getElementById("toast");el.textContent=m;el.style.display="block";setTimeout(()=>el.style.display="none",1600)};
+    const today=()=>new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Seoul"});
+    const copy=async t=>{await navigator.clipboard.writeText(t);toast("복사했습니다")};
+    const loadProgress=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"{}")}catch{return{}}};
+    const saveProgress=p=>localStorage.setItem(KEY,JSON.stringify(p));
+    const applyProgress=data=>{const p=loadProgress();data.items.forEach(it=>{if(p[it.id])Object.assign(it,p[it.id])});return data};
+    const persistItem=it=>{const p=loadProgress();p[it.id]={stage:it.stage,status:it.status};saveProgress(p)};
+    const promptFor=it=>{
+      if(it.kind==="review") return "묘한 명상 1주차 리뷰를 해줘. 전략은 다시 쓰지 말고, 필요하면 한 줄 패치만 제안해. 대상: 한옥 오전 명상, 창가 수면.";
+      if(it.kind==="shorts") return `묘한 명상 싷츠 패키지 만들어줘.\n제목 초안: ${it.title}\n공간: ${it.space}\n음악 결: ${it.bed}\n롱폼 세계관을 유지하고, 한글 카피 6자 이내, 20–30초.`;
+      return `묘한 명상 영상 1개 제작 패키지를 만들어줘.\n기둥: ${it.pillar}\n제목 초안: ${it.title}\n공간: ${it.space}\n음악 결: ${it.bed}\n길이: ${it.minutes}분\n공개: ${it.date} ${it.publish} KST\n스킬 출력 형식 12항목을 그대로 지켜.`;
+    };
+    function render(){
+      document.getElementById("tagline").textContent=board.tagline;
+      document.getElementById("weekChip").innerHTML=`<strong>${board.weekLabel}</strong>`;
+      document.getElementById("clock").textContent=new Date().toLocaleString("ko-KR",{timeZone:"Asia/Seoul"});
+      const longs=board.items.filter(i=>i.kind==="long");
+      const shorts=board.items.filter(i=>i.kind==="shorts");
+      document.getElementById("kpiLong").textContent=`${longs.filter(i=>i.status==="완료").length}/${longs.length}`;
+      document.getElementById("kpiShort").textContent=`${shorts.filter(i=>i.status==="완료").length}/${shorts.length}`;
+      const t=today(); const todayItem=board.items.find(i=>i.date===t);
+      document.getElementById("kpiNow").textContent=todayItem?todayItem.dow:"일";
+      document.getElementById("kpiClaim").textContent=String(board.kpis.claimsTarget);
+      const focus=board.items.find(i=>i.id===selected)||todayItem||longs[0];
+      selected=focus?focus.id:selected;
+      document.getElementById("pipe").innerHTML=board.pipeline.map(s=>`<div class="step${focus&&focus.stage===s.id?" on":""}"><div class="i">${s.id}</div><div class="n">${s.name}</div><div class="h">${s.hint}</div></div>`).join("");
+      document.getElementById("rows").innerHTML=board.items.map(it=>`<tr class="${it.date===t?"today":""}"><td>${it.dow}<br><span style="color:var(--muted);font-size:11px">${it.date.slice(5)} ${it.publish}</span></td><td><span class="pill ${it.kind}">${it.pillar}</span></td><td>${it.title}</td><td>${it.space}<br><span style="color:var(--muted);font-size:11px">${it.bed}</span></td><td><select data-act="stage" data-id="${it.id}">${STAGES.map(s=>`<option value="${s}" ${it.stage===s?"selected":""}>${STAGE_NAME[s]}</option>`).join("")}</select></td><td><select data-act="status" data-id="${it.id}">${STATUS.map(s=>`<option ${it.status===s?"selected":""}>${s}</option>`).join("")}</select></td><td class="row-actions"><button data-act="select" data-id="${it.id}">보기</button><button class="primary" data-act="copy" data-id="${it.id}">프롬프트</button></td></tr>`).join("");
+      const focusItem=board.items.find(i=>i.id===selected);
+      const prompts=[{label:"주간 기획",text:"묘한 명상 이번주 기획"},{label:"선택 영상 패키지",text:focusItem?promptFor(focusItem):"묘한 명상 영상 패키지"},{label:"배경×음악 3조합",text:focusItem&&focusItem.space!=="—"?`묘한 명상 ${focusItem.space} 배경과 음악 3조합`:"묘한 명상 한옥 오전 명상 배경과 음악 3조합"},{label:"전략 패치",text:"묘한 명상 지난주 성과로 전략 패치. 문서는 다시 쓰지 말고 한 줄만."}];
+      document.getElementById("prompts").innerHTML=prompts.map((p,i)=>`<div class="prompt"><div><span>${p.label}</span><p>${p.text.replace(/\n/g,"<br>")}</p></div><button data-copy="${i}">복사</button></div>`).join("");
+      document.getElementById("prompts").querySelectorAll("[data-copy]").forEach(btn=>btn.onclick=()=>copy(prompts[Number(btn.dataset.copy)].text));
+      document.getElementById("log").innerHTML=board.changelog.map(c=>`<div><strong style="color:var(--gold)">${c.date}</strong> · ${c.change}<div class="note">${c.reason}</div></div>`).join("");
+      const gates=["트랙명 / 아티스트 기록","라이선스 ID 기록","채널-라이브러리 연결 확인","설명란 크레딧 찬 채움","의료·효능 표현 없음","10시간 허위 길이 표기 없음"];
+      const gkey="myohan-gates"; const saved=JSON.parse(localStorage.getItem(gkey)||"{}");
+      document.getElementById("gates").innerHTML=gates.map((g,i)=>`<label style="display:flex;gap:8px;align-items:center;margin:6px 0;font-size:13px"><input type="checkbox" data-g="${i}" ${saved[i]?"checked":""}/> ${g}</label>`).join("");
+      document.getElementById("gates").querySelectorAll("input").forEach(inp=>inp.onchange=()=>{saved[inp.dataset.g]=inp.checked;localStorage.setItem(gkey,JSON.stringify(saved))});
+    }
+    document.getElementById("rows").addEventListener("click",e=>{const btn=e.target.closest("button");if(!btn)return;const it=board.items.find(i=>i.id===btn.dataset.id);if(!it)return;if(btn.dataset.act==="select"){selected=it.id;render()}if(btn.dataset.act==="copy")copy(promptFor(it))});
+    document.getElementById("rows").addEventListener("change",e=>{const el=e.target;const it=board.items.find(i=>i.id===el.dataset.id);if(!it)return;if(el.dataset.act==="stage")it.stage=el.value;if(el.dataset.act==="status")it.status=el.value;persistItem(it);render()});
+    document.getElementById("exportBtn").onclick=()=>copy(JSON.stringify(board,null,2));
+    document.getElementById("resetBtn").onclick=()=>{localStorage.removeItem(KEY);location.reload()};
+    async function boot(){
+      const embedded=JSON.parse(document.getElementById("board-data").textContent);
+      try{const res=await fetch("data/board.json",{cache:"no-store"});if(!res.ok)throw 0;board=applyProgress(await res.json())}catch{board=applyProgress(embedded)}
+      render();
+    }
+    boot();
+  </script>
+</body>
+</html>
