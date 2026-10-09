@@ -1,0 +1,4 @@
+# Local video-generation runtime state
+/runtime/
+__pycache__/
+*.py[cod]
