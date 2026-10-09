@@ -59,6 +59,14 @@
     .note{font-size:12px;color:var(--muted);line-height:1.6}
     .gh{display:flex;flex-direction:column;gap:8px}
     .gh a.btn{display:inline-block;text-align:center}
+    .gen-panel{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+    .gen-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .gen-controls select{min-width:180px;padding:8px}
+    .gen-status,.job-row{font-size:12px;color:var(--cream-2);line-height:1.55}
+    .gen-status{margin:10px 0;color:var(--muted)}
+    .job-row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(246,241,232,.06)}
+    .job-row small{display:block;color:var(--muted)}
+    .job-state{color:var(--gold);white-space:nowrap}
   </style>
 </head>
 <body>
@@ -87,6 +95,20 @@
         <div class="pipe" id="pipe"></div>
         <p class="note" style="margin:12px 0 8px">단계·상태를 바꾸면 이 브라우저에 저장됩니다. JSON을 복사해 GitHub data/board.json에 반영할 수 있습니다.</p>
         <div style="overflow-x:auto"><table><thead><tr><th>날짜</th><th>형식</th><th>제목</th><th>공간 / 음악</th><th>단계</th><th>상태</th><th>실행</th></tr></thead><tbody id="rows"></tbody></table></div>
+        <div class="gen-panel">
+          <h2>영상 생성 작업 · 프롬프트 명세</h2>
+          <p class="note">보드 항목을 선택 프리셋에 매칭된 Wan 모델의 3장면 스토리보드 JSON으로 변환합니다. 이는 모델 검증 대상 지정이며, 이 패널 자체는 영상 추론을 실행하지 않습니다. 실제 테스트는 로컬 체크포인트·GPU 환경에서 별도 smoke-test 명령으로 실행합니다.</p>
+          <div class="gen-controls">
+            <select id="genPreset" aria-label="GPU 프리셋">
+              <option value="local_preview">RTX 3070 · Wan2.1 1.3B (검증 대상)</option>
+              <option value="standard_scene">A100 MIG · Wan2.2 TI2V 5B (검증 대상)</option>
+              <option value="premium_scene">H100 · Wan2.2 I2V A14B (검증 대상)</option>
+            </select>
+            <button type="button" class="primary" id="createJobBtn">선택 영상 작업 만들기</button>
+          </div>
+          <div class="gen-status" id="backendStatus">컨트롤러 상태 확인 중…</div>
+          <div id="generationJobs" aria-live="polite"></div>
+        </div>
       </section>
       <aside>
         <section class="card" style="margin-bottom:16px">
@@ -136,7 +158,7 @@
     const today=()=>new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Seoul"});
     const copy=async t=>{await navigator.clipboard.writeText(t);toast("복사했습니다")};
     const loadProgress=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"{}")}catch{return{}}};
-    const saveProgress=p=>localStorage.setItem(KEY,JSON.stringify(p));
+    const saveProgress=p=>{try{localStorage.setItem(KEY,JSON.stringify(p))}catch{toast("브라우저 저장을 사용할 수 없습니다")}};
     const applyProgress=data=>{const p=loadProgress();data.items.forEach(it=>{if(p[it.id])Object.assign(it,p[it.id])});return data};
     const persistItem=it=>{const p=loadProgress();p[it.id]={stage:it.stage,status:it.status};saveProgress(p)};
     const promptFor=it=>{
@@ -165,18 +187,49 @@
       document.getElementById("prompts").querySelectorAll("[data-copy]").forEach(btn=>btn.onclick=()=>copy(prompts[Number(btn.dataset.copy)].text));
       document.getElementById("log").innerHTML=board.changelog.map(c=>`<div><strong style="color:var(--gold)">${c.date}</strong> · ${c.change}<div class="note">${c.reason}</div></div>`).join("");
       const gates=["트랙명 / 아티스트 기록","라이선스 ID 기록","채널-라이브러리 연결 확인","설명란 크레딧 찬 채움","의료·효능 표현 없음","10시간 허위 길이 표기 없음"];
-      const gkey="myohan-gates"; const saved=JSON.parse(localStorage.getItem(gkey)||"{}");
+      const gkey="myohan-gates";
+      let saved={};
+      try{saved=JSON.parse(localStorage.getItem(gkey)||"{}")}catch{saved={}}
       document.getElementById("gates").innerHTML=gates.map((g,i)=>`<label style="display:flex;gap:8px;align-items:center;margin:6px 0;font-size:13px"><input type="checkbox" data-g="${i}" ${saved[i]?"checked":""}/> ${g}</label>`).join("");
-      document.getElementById("gates").querySelectorAll("input").forEach(inp=>inp.onchange=()=>{saved[inp.dataset.g]=inp.checked;localStorage.setItem(gkey,JSON.stringify(saved))});
+      document.getElementById("gates").querySelectorAll("input").forEach(inp=>inp.onchange=()=>{saved[inp.dataset.g]=inp.checked;try{localStorage.setItem(gkey,JSON.stringify(saved))}catch{toast("브라우저 저장을 사용할 수 없습니다")}});
     }
     document.getElementById("rows").addEventListener("click",e=>{const btn=e.target.closest("button");if(!btn)return;const it=board.items.find(i=>i.id===btn.dataset.id);if(!it)return;if(btn.dataset.act==="select"){selected=it.id;render()}if(btn.dataset.act==="copy")copy(promptFor(it))});
+    const escapeHTML=value=>String(value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
+    async function refreshGenerationPanel(){
+      const status=document.getElementById("backendStatus"), list=document.getElementById("generationJobs"), button=document.getElementById("createJobBtn");
+      try{
+        const [health,jobs]=await Promise.all([fetch("/api/v1/health").then(r=>{if(!r.ok)throw Error("컨트롤러에 연결할 수 없습니다") ;return r.json()}),fetch("/api/v1/jobs").then(r=>{if(!r.ok)throw Error("작업 목록을 읽지 못했습니다");return r.json()})]);
+        status.textContent=`${health.message} · 감지된 GPU: ${health.gpuDetected.length?health.gpuDetected.join(", "):"없음/확인 불가"}`;
+        button.disabled=false;
+        list.innerHTML=jobs.length?jobs.map(job=>`<div class="job-row"><div><strong>${escapeHTML(job.title)}</strong><small>${escapeHTML(job.preset)} · ${escapeHTML(job.modelId)} · ${escapeHTML(job.createdAt)} · ${escapeHTML(job.message)}</small></div><span class="job-state">${escapeHTML(job.status)}</span><a class="btn" href="${escapeHTML(job.manifestUrl)}" download="myohan-storyboard-${escapeHTML(job.id)}.json">명세 JSON</a>${job.status==="draft"?`<button data-cancel-job="${escapeHTML(job.id)}">취소</button>`:""}</div>`).join(""):"<p class=\"note\">아직 등록된 작업이 없습니다.</p>";
+      }catch(error){
+        status.textContent=`로컬 컨트롤러에 연결되지 않았습니다. ${error.message} · Pages 주소에서는 GPU 작업 API를 사용할 수 없습니다.`;
+        button.disabled=true;
+        list.innerHTML="<p class=\"note\">작업 API를 사용하려면 로컬 컨트롤러를 실행한 뒤 이 페이지를 다시 여세요.</p>";
+      }
+    }
+    document.getElementById("createJobBtn").addEventListener("click",async()=>{
+      const item=board.items.find(i=>i.id===selected);
+      if(!item||item.kind==="review"){toast("먼저 영상 항목을 선택하세요");return}
+      const button=document.getElementById("createJobBtn");button.disabled=true;
+      try{
+        const response=await fetch("/api/v1/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({itemId:item.id,title:item.title,pillar:item.pillar,kind:item.kind,space:item.space,bed:item.bed,minutes:item.minutes,preset:document.getElementById("genPreset").value})});
+        const result=await response.json();if(!response.ok)throw Error(result.error||"작업 생성 실패");
+        toast("작업 명세를 등록했습니다");await refreshGenerationPanel();
+      }catch(error){toast(error.message);button.disabled=false}
+    });
+    document.getElementById("generationJobs").addEventListener("click",async event=>{
+      const button=event.target.closest("[data-cancel-job]");if(!button)return;
+      try{const response=await fetch(`/api/v1/jobs/${encodeURIComponent(button.dataset.cancelJob)}/cancel`,{method:"POST"});const result=await response.json();if(!response.ok)throw Error(result.error||"취소 실패");await refreshGenerationPanel()}catch(error){toast(error.message)}
+    });
     document.getElementById("rows").addEventListener("change",e=>{const el=e.target;const it=board.items.find(i=>i.id===el.dataset.id);if(!it)return;if(el.dataset.act==="stage")it.stage=el.value;if(el.dataset.act==="status")it.status=el.value;persistItem(it);render()});
     document.getElementById("exportBtn").onclick=()=>copy(JSON.stringify(board,null,2));
-    document.getElementById("resetBtn").onclick=()=>{localStorage.removeItem(KEY);location.reload()};
+    document.getElementById("resetBtn").onclick=()=>{try{localStorage.removeItem(KEY)}catch{}location.reload()};
     async function boot(){
       const embedded=JSON.parse(document.getElementById("board-data").textContent);
       try{const res=await fetch("data/board.json",{cache:"no-store"});if(!res.ok)throw 0;board=applyProgress(await res.json())}catch{board=applyProgress(embedded)}
       render();
+      await refreshGenerationPanel();
     }
     boot();
   </script>

@@ -15,6 +15,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from manifest import build_manifest
+from models import model_for_preset
 
 ROOT = Path(__file__).resolve().parent.parent
 RUNTIME = ROOT / "runtime"
@@ -57,9 +58,10 @@ def public_job(row: sqlite3.Row) -> dict:
         "pillar": row["pillar"], "space": row["space"], "bed": row["bed"],
         "minutes": row["minutes"], "kind": payload.get("kind", "long"),
         "preset": row["preset"], "status": row["status"],
+        "modelId": model_for_preset(row["preset"])["modelId"],
         "createdAt": row["created_at"],
         "manifestUrl": f"/api/v1/jobs/{row['id']}/manifest",
-        "message": "장면별 프롬프트 명세를 만들었습니다. 영상 모델 추론은 아직 실행되지 않았습니다.",
+        "message": "모델 검증 대상으로 매칭됨 · 추론/영상 생성은 아직 실행되지 않았습니다.",
     }
 
 
